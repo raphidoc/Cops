@@ -481,6 +481,153 @@ generate.cops.DB <- function(path="./",
   save(COPS.DB, file = paste("COPS.DB.PackageVersion.",packageVersion("Cops"),".",mission,".RData", sep=""))
   write.table(all, file = paste("COPS.DB.PackageVersion.",packageVersion("Cops"),".",mission,".dat", sep=""), sep=",", quote=F, row.names=F)
 
+  # Generate report in pdf and html allowing first quality check
+  # html output take advantage of interactive plot throught plotly
+  require(rmarkdown)
+
+  report = paste0("Report.COPS.DB.PackageVersion.",packageVersion("Cops"),".",mission,".Rmd")
+
+  cat(paste0("---\ntitle: '<center>COPS report for __",mission,"__ mission from __",min(COPS.DB$date),"__ to __",max(COPS.DB$date),"__ UTC </center>'\n",
+           "author: ''\n",
+           "header-includes:\n",
+           "output:\n\x20html_document:\n\x20\x20toc: true\n\x20\x20toc_float: true\n\x20\x20toc_depth: 5\n\x20\x20number_sections: true\n---\n\n"),
+      file=report, append = F)
+
+  cat("<style>\n\ntable, td, th {\n\tborder: none;\n\tpadding-left: 1em;\n\tpadding-right: 1em;\n\tmargin-left: auto;\n\tmargin-right: auto;\n\tmargin-top: 1em;\n\tmargin-bottom: 1em;\n}\n\n</style>\n\n",
+      file=report, append = T)
+
+  cat(paste0("```{r setup, include=FALSE, echo=TRUE, message=FALSE}\n",
+             "require(dplyr)\nrequire(tidyr)\nrequire(ggplot2)\nrequire(plotly)\nrequire(stargazer)\n",
+             "```\n"), file = report, append = T)
+
+  cat(paste0("<center><font size='5'> Generated with Cops package __version: ",packageVersion("Cops"),"__ \n  \n",
+            "Date: __",Sys.time(),"__ GMT</font></center>\n"), file = report, append=T)
+
+  # Rrs spectrum plot
+  cat("\n# Rrs report \n\n", file = report, append=T)
+  cat(paste0("```{r,echo=FALSE, message=FALSE}\n",
+             "  Rrs <- data.frame(COPS.DB$stationID, COPS.DB$Rrs.m)
+  names(Rrs) <- c(\"ID\",paste0(\"Rrs_\",COPS.DB$waves))
+
+  Rrs <- Rrs %>% pivot_longer(cols = all_of(str_subset(names(Rrs),
+                                            \"([:alnum:]+_)?[:alnum:]+(?=(_[:digit:]+))\")),
+                   names_to = c(\".value\",\"Lambda\"),
+                   names_pattern = \"(.+)_(.+)\")
+  ggplotly(Rrs %>% ggplot(aes(Lambda, Rrs, group=ID, color=ID)) + geom_line(alpha=0.5))\n",
+             "```\n"), file = report, append = T)
+
+  # Rrs stats table
+  cat(paste0("```{r,echo=FALSE,results='asis'}\n",
+             "Rrs <- data.frame(COPS.DB$Rrs.m); names(Rrs) <- COPS.DB$waves\n",
+             "stargazer(Rrs*1000,",
+    "type = \"html\", column.sep.width = \"5pt\", label = \"Rrs*1000 summary\", title = \"Rrs*1000 summary\")\n",
+             "```\n"), file = report, append = T)
+
+  # nLw spectrum plot
+  cat("\n# nLw report \n\n", file = report, append=T)
+  cat(paste0("```{r,echo=FALSE, message=FALSE}\n",
+             "  nLw <- data.frame(COPS.DB$stationID, COPS.DB$nLw.m)
+  names(nLw) <- c(\"ID\",paste0(\"nLw_\",COPS.DB$waves))
+
+  nLw <- nLw %>% pivot_longer(cols = all_of(str_subset(names(nLw),
+                                            \"([:alnum:]+_)?[:alnum:]+(?=(_[:digit:]+))\")),
+                   names_to = c(\".value\",\"Lambda\"),
+                   names_pattern = \"(.+)_(.+)\")
+  ggplotly(nLw %>% ggplot(aes(Lambda, nLw, group=ID, color=ID)) + geom_line(alpha=0.5))\n",
+             "```\n"), file = report, append = T)
+
+  # nLw stats table
+  cat(paste0("```{r,echo=FALSE,results='asis'}\n",
+             "nLw <- data.frame(COPS.DB$nLw.m); names(nLw) <- COPS.DB$waves\n",
+             "stargazer(nLw,",
+             "type = \"html\", column.sep.width = \"5pt\", label = \"nLw summary\", title = \"nLw summary\")\n",
+             "```\n"), file = report, append = T)
+
+  # Q factor spectrum plot
+  cat("\n# Q factor report \n\n", file = report, append=T)
+  cat(paste0("```{r,echo=FALSE, message=FALSE}\n",
+             "  Q.Factor <- data.frame(COPS.DB$stationID, COPS.DB$Q.Factor.m)
+  names(Q.Factor) <- c(\"ID\",paste0(\"Q.Factor_\",COPS.DB$waves))
+
+  Q.Factor <- Q.Factor %>% pivot_longer(cols = all_of(str_subset(names(Q.Factor),
+                                            \"([:alnum:]+_)?[:alnum:]+(?=(_[:digit:]+))\")),
+                   names_to = c(\".value\",\"Lambda\"),
+                   names_pattern = \"(.+)_(.+)\")
+  ggplotly(Q.Factor %>% ggplot(aes(Lambda, Q.Factor, group=ID, color=ID)) + geom_line(alpha=0.5))\n",
+             "```\n"), file = report, append = T)
+
+  # Q stats table
+  cat(paste0("```{r,echo=FALSE,results='asis'}\n",
+             "Q.Factor <- data.frame(COPS.DB$Q.Factor.m); names(Q.Factor) <- COPS.DB$waves\n",
+             "stargazer(Q.Factor,",
+             "type = \"html\", column.sep.width = \"5pt\", label = \"Q.Factor summary\", title = \"Q.Factor summary\")\n",
+             "```\n"), file = report, append = T)
+
+  # Rb spectrum plot
+  cat("\n# Bottom reflectance report \n\n", file = report, append=T)
+  cat(paste0("```{r,echo=FALSE, message=FALSE}\n",
+             "  Rb <- data.frame(COPS.DB$stationID, COPS.DB$Rb.m)
+  names(Rb) <- c(\"ID\",paste0(\"Rb_\",COPS.DB$waves))
+
+  Rb <- Rb %>% pivot_longer(cols = all_of(str_subset(names(Rb),
+                                            \"([:alnum:]+_)?[:alnum:]+(?=(_[:digit:]+))\")),
+                   names_to = c(\".value\",\"Lambda\"),
+                   names_pattern = \"(.+)_(.+)\")
+  ggplotly(Rb %>% ggplot(aes(Lambda, Rb, group=ID, color=ID)) + geom_line(alpha=0.5))\n",
+             "```\n"), file = report, append = T)
+
+  # Rb stats table
+  cat(paste0("```{r,echo=FALSE,results='asis'}\n",
+             "Rb <- data.frame(COPS.DB$Rb.m); names(Rb) <- COPS.DB$waves\n",
+             "stargazer(Rb,",
+             "type = \"html\", column.sep.width = \"5pt\", label = \"Rb summary\", title = \"Rb summary\")\n",
+             "```\n"), file = report, append = T)
+
+  # Kd1p spectrum plot
+  cat("\n# Kd 1 percent report \n\n", file = report, append=T)
+  cat(paste0("```{r,echo=FALSE, message=FALSE}\n",
+             "  Kd.1p <- data.frame(COPS.DB$stationID, COPS.DB$Kd.1p.m)
+  names(Kd.1p) <- c(\"ID\",paste0(\"Kd.1p_\",COPS.DB$waves))
+
+  Kd.1p <- Kd.1p %>% pivot_longer(cols = all_of(str_subset(names(Kd.1p),
+                                            \"([:alnum:]+_)?[:alnum:]+(?=(_[:digit:]+))\")),
+                   names_to = c(\".value\",\"Lambda\"),
+                   names_pattern = \"(.+)_(.+)\")
+  ggplotly(Kd.1p %>% ggplot(aes(Lambda, Kd.1p, group=ID, color=ID)) + geom_line(alpha=0.5))\n",
+             "```\n"), file = report, append = T)
+
+  # Kd1p stats table
+  cat(paste0("```{r,echo=FALSE,results='asis'}\n",
+             "Kd.1p <- data.frame(COPS.DB$Kd.1p.m); names(Kd.1p) <- COPS.DB$waves\n",
+             "stargazer(Kd.1p,",
+             "type = \"html\", column.sep.width = \"5pt\", label = \"Kd.1p summary\", title = \"Kd.1p summary\")\n",
+             "```\n"), file = report, append = T)
+
+  # Kd10p spectrum plot
+  cat("\n# Kd 10 percent report \n\n", file = report, append=T)
+  cat(paste0("```{r,echo=FALSE, message=FALSE}\n",
+             "  Kd.10p <- data.frame(COPS.DB$stationID, COPS.DB$Kd.10p.m)
+  names(Kd.10p) <- c(\"ID\",paste0(\"Kd.10p_\",COPS.DB$waves))
+
+  Kd.10p <- Kd.10p %>% pivot_longer(cols = all_of(str_subset(names(Kd.10p),
+                                            \"([:alnum:]+_)?[:alnum:]+(?=(_[:digit:]+))\")),
+                   names_to = c(\".value\",\"Lambda\"),
+                   names_pattern = \"(.+)_(.+)\")
+  ggplotly(Kd.10p %>% ggplot(aes(Lambda, Kd.10p, group=ID, color=ID)) + geom_line(alpha=0.5))\n",
+             "```\n"), file = report, append = T)
+
+  # Kd10p stats table
+  cat(paste0("```{r,echo=FALSE,results='asis'}\n",
+             "Kd.10p <- data.frame(COPS.DB$Kd.10p.m); names(Kd.10p) <- COPS.DB$waves\n",
+             "stargazer(Kd.10p,",
+             "type = \"html\", column.sep.width = \"5pt\", label = \"Kd.10p summary\", title = \"Kd.10p summary\")\n",
+             "```\n"), file = report, append = T)
+
+  #render(report, pdf_document())
+  render(report)
+  #file.remove(report)
+
+
   return(COPS.DB)
 }
 
