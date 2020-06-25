@@ -625,7 +625,7 @@ generate.cops.DB <- function(path="./",
 
   #render(report, pdf_document())
   render(report)
-  #file.remove(report)
+  file.remove(report)
 
 
   return(COPS.DB)
