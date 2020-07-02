@@ -100,7 +100,7 @@ derived.data <- function(lon, lat, cops.init, cops.raw) {
 			    # Modified by Simon Belanger on Aug 2016 to process
 			    # GPS data obtained with uprofile 1.9.10 and after
 			    if (str_detect(gps.file, "GPS_")) {
-			      ext = unlist(strsplit(gps.file, "[.]"))[2]
+			      ext = unlist(strsplit(gps.file, "[.]"))[length(unlist(strsplit(gps.file, "[.]")))]
 			      if (ext == "tsv" || ext =="txt") {
 			        gps.data <- read.table(gps.file,sep="\t",
 			                               colClasses = c("character","character","numeric","character","numeric","numeric","numeric"),header=TRUE)
@@ -113,7 +113,7 @@ derived.data <- function(lon, lat, cops.init, cops.raw) {
 			      names(gps.data)[4] <- "GpsTime"
 			      names(gps.data)[1] <- "ComputerTime"
 			    } else {
-			      ext = unlist(strsplit(gps.file, "[.]"))[2]
+			      ext = unlist(strsplit(gps.file, "[.]"))[length(unlist(strsplit(gps.file, "[.]")))]
 			      if (ext == "tsv" || ext =="txt") {
 			        gps.data <- read.table(gps.file,sep="\t",
 			                               colClasses = c("character","numeric","character","numeric","numeric","numeric"),header=TRUE)
