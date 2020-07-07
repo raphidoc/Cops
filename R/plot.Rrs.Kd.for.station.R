@@ -46,7 +46,7 @@ plot.Rrs.Kd.for.station <- function(path="./", depthEdZ = NA) {
   ix.waves = which(waves > 370)
   plot(waves[ix.waves], cops$Rrs.0p[ix.waves], xlab="Wavelength",
        ylab="Rrs0+",
-       ylim=c(0,max(cops$Rrs.0p[ix.waves],na.rm=T)+0.001),
+       ylim=c(0,max(cops$Rrs.0p.linear[ix.waves],na.rm=T)+0.001),
        xlim=c(370, max(waves)+10),
        lwd=2, type="l", main=getwd(), sub=cops$date.mean)
   for (i in 1:nf){
