@@ -481,7 +481,7 @@ generate.cops.DB <- function(path="./",
   save(COPS.DB, file = paste("COPS.DB.PackageVersion.",packageVersion("Cops"),".",mission,".RData", sep=""))
   write.table(all, file = paste("COPS.DB.PackageVersion.",packageVersion("Cops"),".",mission,".dat", sep=""), sep=",", quote=F, row.names=F)
 
-  # Generate report in pdf and html allowing first quality check
+  # Generate report in html allowing first quality check
   # html output take advantage of interactive plot throught plotly
   require(rmarkdown)
 
@@ -513,7 +513,7 @@ generate.cops.DB <- function(path="./",
                                             \"([:alnum:]+_)?[:alnum:]+(?=(_[:digit:]+))\")),
                    names_to = c(\".value\",\"Lambda\"),
                    names_pattern = \"(.+)_(.+)\")
-  ggplotly(Rrs %>% ggplot(aes(Lambda, Rrs, group=ID, color=ID)) + geom_line(alpha=0.5))\n",
+  ggplotly(Rrs %>% ggplot(aes(Lambda, Rrs, group=ID, color=ID)) + geom_line(alpha=0.5) + ylab('Rrs [sr-1]'))\n",
              "```\n"), file = report, append = T)
 
   # Rrs stats table
@@ -573,7 +573,7 @@ generate.cops.DB <- function(path="./",
                                             \"([:alnum:]+_)?[:alnum:]+(?=(_[:digit:]+))\")),
                    names_to = c(\".value\",\"Lambda\"),
                    names_pattern = \"(.+)_(.+)\")
-  ggplotly(Rb %>% ggplot(aes(Lambda, Rb, group=ID, color=ID)) + geom_line(alpha=0.5))\n",
+  ggplotly(Rb %>% ggplot(aes(Lambda, Rb, group=ID, color=ID)) + geom_line(alpha=0.5) + ylab('reflectance (unitless)'))\n",
              "```\n"), file = report, append = T)
 
   # Rb stats table
@@ -593,7 +593,7 @@ generate.cops.DB <- function(path="./",
                                             \"([:alnum:]+_)?[:alnum:]+(?=(_[:digit:]+))\")),
                    names_to = c(\".value\",\"Lambda\"),
                    names_pattern = \"(.+)_(.+)\")
-  ggplotly(Kd.1p %>% ggplot(aes(Lambda, Kd.1p, group=ID, color=ID)) + geom_line(alpha=0.5))\n",
+  ggplotly(Kd.1p %>% ggplot(aes(Lambda, Kd.1p, group=ID, color=ID)) + geom_line(alpha=0.5)+ ylab('Kd 1% [m-1]'))\n",
              "```\n"), file = report, append = T)
 
   # Kd1p stats table
@@ -613,7 +613,7 @@ generate.cops.DB <- function(path="./",
                                             \"([:alnum:]+_)?[:alnum:]+(?=(_[:digit:]+))\")),
                    names_to = c(\".value\",\"Lambda\"),
                    names_pattern = \"(.+)_(.+)\")
-  ggplotly(Kd.10p %>% ggplot(aes(Lambda, Kd.10p, group=ID, color=ID)) + geom_line(alpha=0.5))\n",
+  ggplotly(Kd.10p %>% ggplot(aes(Lambda, Kd.10p, group=ID, color=ID)) + geom_line(alpha=0.5)+ ylab('Kd 10% [m-1]'))\n",
              "```\n"), file = report, append = T)
 
   # Kd10p stats table
