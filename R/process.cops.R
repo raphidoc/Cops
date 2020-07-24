@@ -554,10 +554,5 @@ str(absorption.tab)
       }
       rm(cops.info, info.longitude, info.latitude, chl, SHADOW.CORRECTION, absorption.waves, absorption.values, blacks, cops.raw, cops.dd, cops.black, cops.Ed0, cops.EuZ, cops.LuZ, cops.EdZ, cops.aops, cops, cops.file, save.file, pdf.file)
     }
-
-
-
-  }
-
-
+	}
 }
