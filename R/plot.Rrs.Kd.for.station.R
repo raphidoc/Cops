@@ -45,7 +45,7 @@ plot.Rrs.Kd.for.station <- function(path="./", depthEdZ = NA) {
   # select 380 to NIR bands
   ix.waves = which(waves > 370)
 
-  if (!all(is.na(cops$Rrs.0p.linear))) {
+  if (!all(is.na(cops$Rrs.0p.linear)) & !all(is.na(cops$Rrs.0p.linear[which(waves > 500 & waves < 600)]))) {
     maxY <- c(0,max(cops$Rrs.0p.linear[ix.waves],na.rm=T)+0.002)
   } else {
     maxY <- c(0,max(cops$Rrs.0p[ix.waves],na.rm=T)+0.002)
