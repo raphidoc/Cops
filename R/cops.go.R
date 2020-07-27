@@ -50,9 +50,9 @@ cops.go <- function(interactive = FALSE, ASCII=FALSE, CLEAN.FILES=FALSE) {
 				  expr = {
 				    # plot.Rrs.Kd.for.station doesn't close Rstudio graph, it's an issue when batch processing
 				    graphics.off()
-				    try(process.cops(dirdat, ASCII, CLEAN.FILES))
-				    try(plot.Rrs.Kd.for.station(dirdat))
-				    message("Succes \\o/\n\t|\n\x20\x20\x20\x20\x20\x20\x20/ \\")
+				    process.cops(dirdat, ASCII, CLEAN.FILES)
+				    plot.Rrs.Kd.for.station(dirdat)
+				    #message("Succes \\o/\n\t|\n\x20\x20\x20\x20\x20\x20\x20/ \\")
 				  },
 				  error = function(e){
 				    message("Failure (error) /o\\\n\t|\n\t/ \\")
@@ -64,9 +64,9 @@ cops.go <- function(interactive = FALSE, ASCII=FALSE, CLEAN.FILES=FALSE) {
 				  },
 				  warning = function(w){
 				    #message("Warning: _o_\n\t\x20\x20|\n\t\x20/ \\")
-				    cat(paste0("-----",dirdat,"\n",w,"\n-----"),
-				        file = file.path(starting.dir,paste0("COPS_warnings_",Sys.Date(),".txt")),
-				        append = T)
+				    #cat(paste0("-----",dirdat,"\n",w,"\n-----"),
+				        #file = file.path(starting.dir,paste0("COPS_warnings_",Sys.Date(),".txt")),
+				        #append = T)
 				    invokeRestart("muffleWarning")
 				  }
 				)
