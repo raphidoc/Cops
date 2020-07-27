@@ -46,7 +46,7 @@ cops.go <- function(interactive = FALSE, ASCII=FALSE, CLEAN.FILES=FALSE) {
 				}
 				mymessage(paste("PROCESSING DIRECTORY", dirdat), head = "@", tail = "@")
 
-				withCallingHandlers(
+				tryCatch(
 				  expr = {
 				    # plot.Rrs.Kd.for.station doesn't close Rstudio graph, it's an issue when batch processing
 				    graphics.off()
@@ -55,20 +55,21 @@ cops.go <- function(interactive = FALSE, ASCII=FALSE, CLEAN.FILES=FALSE) {
 				    #message("Succes \\o/\n\t|\n\x20\x20\x20\x20\x20\x20\x20/ \\")
 				  },
 				  error = function(e){
-				    message("Failure (error) /o\\\n\t|\n\t/ \\")
+				    message("error: /o\\\n\t|\n\t/ \\")
 				    message(e,"\n")
-				    cat(paste0("-----",Sys.time(),"\n",dirdat,"\n",e,"\n-----\n"),
+				    cat(paste0("-----",Sys.time(),"\n",dirdat,"\n",e,"-----\n"),
 				        file = file.path(starting.dir,paste0("COPS_errors_",Sys.Date(),".txt")),
 				        append = T)
 				    #invokeRestart("abort")
 				  },
-				  warning = function(w){
-				    #message("Warning: _o_\n\t\x20\x20|\n\t\x20/ \\")
+				  #warning = function(w){
+				    #message("warning: _o_\n\t\x20\x20|\n\t\x20/ \\")
 				    #cat(paste0("-----",dirdat,"\n",w,"\n-----"),
 				        #file = file.path(starting.dir,paste0("COPS_warnings_",Sys.Date(),".txt")),
 				        #append = T)
-				    invokeRestart("muffleWarning")
-				  }
+				    #invokeRestart("muffleWarning")
+				  #},
+				  finally = next()
 				)
 			}
 			setwd(starting.dir)
