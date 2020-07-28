@@ -45,8 +45,32 @@ cops.go <- function(interactive = FALSE, ASCII=FALSE, CLEAN.FILES=FALSE) {
 					stop()
 				}
 				mymessage(paste("PROCESSING DIRECTORY", dirdat), head = "@", tail = "@")
-				process.cops(dirdat, ASCII, CLEAN.FILES)
-				plot.Rrs.Kd.for.station(dirdat)
+
+				tryCatch(
+				  expr = {
+				    # plot.Rrs.Kd.for.station doesn't close Rstudio graph, it's an issue when batch processing
+				    graphics.off()
+				    process.cops(dirdat, ASCII, CLEAN.FILES)
+				    plot.Rrs.Kd.for.station(dirdat)
+				    #message("Succes \\o/\n\t|\n\x20\x20\x20\x20\x20\x20\x20/ \\")
+				  },
+				  error = function(e){
+				    message("error: /o\\\n\t|\n\t/ \\")
+				    message(e,"\n")
+				    cat(paste0("-----",Sys.time(),"\n",dirdat,"\n",e,"-----\n"),
+				        file = file.path(starting.dir,paste0("COPS_errors_",Sys.Date(),".txt")),
+				        append = T)
+				    #invokeRestart("abort")
+				  },
+				  #warning = function(w){
+				    #message("warning: _o_\n\t\x20\x20|\n\t\x20/ \\")
+				    #cat(paste0("-----",dirdat,"\n",w,"\n-----"),
+				        #file = file.path(starting.dir,paste0("COPS_warnings_",Sys.Date(),".txt")),
+				        #append = T)
+				    #invokeRestart("muffleWarning")
+				  #},
+				  finally = next()
+				)
 			}
 			setwd(starting.dir)
 		}
