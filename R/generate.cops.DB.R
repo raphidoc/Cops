@@ -353,7 +353,7 @@ generate.cops.DB <- function(project,
         if (!is.null(cops$Rb.Q)) {
           Rb.m[i,xw.DB] = cops$Rb.EuZ[xw]
           Rb.Q.m[i,xw.DB] = cops$Rb.Q[xw]
-        } else Rb[i,xw.DB] = cops$Rb.LuZ[xw]
+        } else Rb.m[i,xw.DB] = cops$Rb.LuZ[xw]
       }
 
       # extract Ed0.0p
