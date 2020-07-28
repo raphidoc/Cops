@@ -22,7 +22,7 @@
 #' The object COPS.DB is saved in RData format. The data are also saved in ASCII (.dat with comma separator)
 #' and a figure showing the measured rho_w spectra of the data base is produced.
 #'
-generate.cops.DB <- function(path="./",
+generate.cops.DB <- function(project,
                              mission="XXX") {
 
   GreggCarder.data()
@@ -30,8 +30,39 @@ generate.cops.DB <- function(path="./",
   ##### All available wavelenghts proposed by BIOSPHERICAL
   waves.DB=c(305, 313, 320, 330, 340, 380, 395, 412, 443, 465, 490, 510, 532, 555,
              560, 565, 589, 625, 665, 683, 694, 710, 765, 780, 875)
-  setwd(path)
-  parentpath <- getwd()
+
+  L2 <- file.path(project, "L2")
+
+  # Check project before doing any manipulation
+  #CheckList <- lighthouse::Check.project(project,L2,param="COPS")
+  #if (CheckList["Proot"][[1]] == F) {stop("project path is not set at a project root folder")}
+
+  # Read processing Log
+  LogFile <- list.files(path = project, pattern = "Cops_Processing_Log", full.names = T)
+
+  ProLog <- data.table::fread(file = LogFile, data.table = F)
+
+  ProLog <- ProLog %>% mutate(Station = paste(Station_name,Boat,sep = "_"))
+
+  # List avalible Station in L2
+  dirs <- grep("/COPS(_[[:alpha:]]+)?$",list.dirs(L2,recursive = T), value = T)
+  COPSframe <- data.frame(dirs)
+
+  COPSframe <- COPSframe %>%
+    mutate(Station = paste0(str_extract(dirs, "(?<=Station)[[:alnum:]-\\.]+(?=/)"),
+                            str_extract(dirs,"(?<=/COPS)_[:alnum:]+$")))
+
+  # Identifies path with ProLog
+
+  # Filter Station_Kept == T
+  ProLog <- ProLog %>% filter(Station_kept == "T")
+
+  # Create dirs path for filtered station
+  ProLog <- ProLog %>% mutate(path=file.path(L2,))
+  #
+
+  setwd(project)
+  ppath <- getwd()
   dirs <- scan(file = "directories.for.cops.dat", "", sep = "\n", comment.char = "#")
 
   ndirs = length(dirs)
@@ -477,7 +508,7 @@ generate.cops.DB <- function(path="./",
                  Ed0.f.diff.measured = Ed0.f[,(nwaves+1)])
 
   all <- cbind(stationID,all)
-  setwd(parentpath)
+  setwd(ppath)
   save(COPS.DB, file = paste("COPS.DB.PackageVersion.",packageVersion("Cops"),".",mission,".RData", sep=""))
   write.table(all, file = paste("COPS.DB.PackageVersion.",packageVersion("Cops"),".",mission,".dat", sep=""), sep=",", quote=F, row.names=F)
 
