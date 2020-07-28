@@ -1,3 +1,6 @@
+#' @export
+#'
+#' @import dplyr
 #'
 #' Generate an AOPs data base derived from COPS light profiles for a list of directories
 #'
@@ -6,12 +9,11 @@
 #' In addition, the extrapolation method for Rrs.0p must be specified in the
 #' third column of the select.cops.dat.
 #'
-#' @param path is the path where the file directories.for.cops.dat containing the data folders
-#' to merge in the data base.
-#' @param wave.DB is a vector of wavelengths to include un the data base. Default is
-#' waves.DB=c(305, 320, 330, 340,380, 412, 443, 465,490, 510, 532, 555,589, 625, 665, 683, 694, 710, 780)
+#' @param project is the project path top level where Cops_Processing_Log can be found.
+#'
 #' @param mission is a string for the name of the mission. It will be used for the file names of the output.
-
+#'
+#' @param boat OPTIONAL: filter the selected boat, column Boat must be present in Cops_Processing_Log
 #'
 #' @return It returns a list object named COPS.DB containing matrices of
 #' mean and standard deviation
@@ -23,7 +25,8 @@
 #' and a figure showing the measured rho_w spectra of the data base is produced.
 #'
 generate.cops.DB <- function(project,
-                             mission="XXX") {
+                             mission="XXX",
+                             boat=c("")) {
 
   GreggCarder.data()
 
@@ -38,32 +41,44 @@ generate.cops.DB <- function(project,
   #if (CheckList["Proot"][[1]] == F) {stop("project path is not set at a project root folder")}
 
   # Read processing Log
-  LogFile <- list.files(path = project, pattern = "Cops_Processing_Log", full.names = T)
+  LogFile <- list.files(path = project, pattern = "Cops_Processing_Log", recursive = T, full.names = T)
 
   ProLog <- data.table::fread(file = LogFile, data.table = F)
 
-  ProLog <- ProLog %>% mutate(Station = paste(Station_name,Boat,sep = "_"))
+  if (any(str_detect(names(ProLog), "Boat"))) {
+    ProLog <- ProLog %>% mutate(Station = paste(Station_name,Boat,sep = "_"))
+  }
 
   # List avalible Station in L2
   dirs <- grep("/COPS(_[[:alpha:]]+)?$",list.dirs(L2,recursive = T), value = T)
   COPSframe <- data.frame(dirs)
 
+  if (any(str_detect(dirs, "/COPS_[[:alpha:]]+$"))){
   COPSframe <- COPSframe %>%
     mutate(Station = paste0(str_extract(dirs, "(?<=Station)[[:alnum:]-\\.]+(?=/)"),
                             str_extract(dirs,"(?<=/COPS)_[:alnum:]+$")))
+  } else {
+    COPSframe <- COPSframe %>%
+      mutate(Station = paste0(str_extract(dirs, "(?<=Station)[[:alnum:]-\\.]+(?=/)")))
+  }
 
-  # Identifies path with ProLog
+  # Identifies paths with ProLog
+  ProLog <- ProLog %>% inner_join(COPSframe, by="Station")
 
   # Filter Station_Kept == T
   ProLog <- ProLog %>% filter(Station_kept == "T")
 
-  # Create dirs path for filtered station
-  ProLog <- ProLog %>% mutate(path=file.path(L2,))
-  #
+  # Filter boat
+  if (boat != c("")) {
+    ProLog <- ProLog %>% filter(Boat == boat)
+  }
 
-  setwd(project)
+  setwd(L2)
   ppath <- getwd()
-  dirs <- scan(file = "directories.for.cops.dat", "", sep = "\n", comment.char = "#")
+
+  #
+  dirs <- as.character(ProLog$dirs)
+  #dirs <- scan(file = "directories.for.cops.dat", "", sep = "\n", comment.char = "#")
 
   ndirs = length(dirs)
 
@@ -455,7 +470,7 @@ generate.cops.DB <- function(project,
 
   }
 
-  setwd(path)
+  setwd(ppath)
   ### Extract the Station ID from the paths
   for (d in 1:ndirs) {
     res=unlist(strsplit(as.character(dirs[d]), "/"))
@@ -509,16 +524,19 @@ generate.cops.DB <- function(project,
 
   all <- cbind(stationID,all)
   setwd(ppath)
-  save(COPS.DB, file = paste("COPS.DB.PackageVersion.",packageVersion("Cops"),".",mission,".RData", sep=""))
-  write.table(all, file = paste("COPS.DB.PackageVersion.",packageVersion("Cops"),".",mission,".dat", sep=""), sep=",", quote=F, row.names=F)
+  save(COPS.DB, file = paste("COPS_DB_PackageVersion_",packageVersion("Cops"),"_",
+                             mission,str_c(boat,collapse = "_"),".RData", sep=""))
+  write.table(all, file = paste("COPS_DB_PackageVersion_",packageVersion("Cops"),"_",
+                                mission,str_c(boat,collapse = "_"),".dat", sep=""), sep=",", quote=F, row.names=F)
 
   # Generate report in html allowing first quality check
   # html output take advantage of interactive plot throught plotly
   require(rmarkdown)
 
-  report = paste0("Report.COPS.DB.PackageVersion.",packageVersion("Cops"),".",mission,".Rmd")
+  report = paste0("Report_COPS_DB_PackageVersion_",packageVersion("Cops"),"_",
+                  mission,str_c(boat,collapse = "_"),".Rmd")
 
-  cat(paste0("---\ntitle: '<center>COPS report for __",mission,"__ mission from __",min(COPS.DB$date),"__ to __",max(COPS.DB$date),"__ UTC </center>'\n",
+  cat(paste0("---\ntitle: '<center>COPS report for __",mission," ",str_c(boat,collapse = "_"),"__ mission from __",min(COPS.DB$date),"__ to __",max(COPS.DB$date),"__ UTC </center>'\n",
            "author: ''\n",
            "header-includes:\n",
            "output:\n\x20html_document:\n\x20\x20toc: true\n\x20\x20toc_float: true\n\x20\x20toc_depth: 5\n\x20\x20number_sections: true\n---\n\n"),
@@ -544,7 +562,7 @@ generate.cops.DB <- function(project,
                                             \"([:alnum:]+_)?[:alnum:]+(?=(_[:digit:]+))\")),
                    names_to = c(\".value\",\"Lambda\"),
                    names_pattern = \"(.+)_(.+)\")
-  ggplotly(Rrs %>% ggplot(aes(Lambda, Rrs, group=ID, color=ID)) + geom_line(alpha=0.5) + ylab('Rrs [sr-1]'))\n",
+  ggplotly(Rrs %>% filter(Rrs < 0.01) %>% ggplot(aes(Lambda, Rrs, group=ID, color=ID)) + geom_line(alpha=0.5) + ylab('Rrs [sr-1]'))\n",
              "```\n"), file = report, append = T)
 
   # Rrs stats table
