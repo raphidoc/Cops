@@ -1,6 +1,7 @@
 #' @export
 #'
 #' @import dplyr
+#' @import stringr
 #'
 #' Generate an AOPs data base derived from COPS light profiles for a list of directories
 #'
@@ -69,6 +70,17 @@ generate.cops.DB <- function(project,
   ProLog <- ProLog %>% filter(Station_kept == "T")
 
   # Filter boat
+  if (any(str_detect(names(ProLog), "Boat")) & boat != c("") &
+      !any(boat == unique(ProLog$Boat))) {
+    stop("boat name does not match any Boat in Cops_Processing_Log\nLog_Boat: ",str_c(unique(ProLog$Boat),collapse = " "),
+            "\nuser_boat: ",boat)
+  }
+  if (any(str_detect(names(ProLog), "Boat")) & length(boat) > 1 &
+      all(sort(boat) == sort(unique(ProLog$Boat)))) {
+    stop("boat name does not match Boat in Cops_Processing_Log\nLog_Boat: ",str_c(unique(ProLog$Boat),collapse = " "),
+            "\nuser_boat: ",boat)
+  }
+
   if (boat != c("")) {
     ProLog <- ProLog %>% filter(Boat == boat)
   }
@@ -339,8 +351,8 @@ generate.cops.DB <- function(project,
       if (!is.na(SHALLOW)) {
         bottom.depth[i] <- cops$bottom.depth
         if (!is.null(cops$Rb.Q)) {
-          Rb[i,xw.DB] = cops$Rb.EuZ[xw]
-          Rb.Q[i,xw.DB] = cops$Rb.Q[xw]
+          Rb.m[i,xw.DB] = cops$Rb.EuZ[xw]
+          Rb.Q.m[i,xw.DB] = cops$Rb.Q[xw]
         } else Rb[i,xw.DB] = cops$Rb.LuZ[xw]
       }
 
