@@ -42,7 +42,7 @@ generate.cops.DB <- function(project,
   #if (CheckList["Proot"][[1]] == F) {stop("project path is not set at a project root folder")}
 
   # Read processing Log
-  LogFile <- list.files(path = project, pattern = "Cops_Processing_Log", recursive = T, full.names = T)
+  LogFile <- list.files(path = file.path(project,"ProLog"), pattern = "Cops_Processing_Log", recursive = T, full.names = T)
 
   ProLog <- data.table::fread(file = LogFile, data.table = F)
 
