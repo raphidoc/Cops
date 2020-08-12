@@ -29,6 +29,8 @@ generate.cops.DB <- function(project,
                              mission="XXX",
                              boat=c("")) {
 
+  if (!is.character(mission)) {stop("mission must be character")}
+
   GreggCarder.data()
 
   ##### All available wavelenghts proposed by BIOSPHERICAL
@@ -49,18 +51,24 @@ generate.cops.DB <- function(project,
   if (any(str_detect(names(ProLog), "Boat"))) {
     ProLog <- ProLog %>% mutate(Station = paste(Station_name,Boat,sep = "_"))
   }
+  if (any(str_detect(names(ProLog), "Date"))) {
+    ProLog <- ProLog %>% mutate(Station = paste(str_replace_all(Date, "-", ""),Station_name,sep = "_"))
+  }
 
-  # List avalible Station in L2
+  # List available Station in L2
   dirs <- grep("/COPS(_[[:alpha:]]+)?$",list.dirs(L2,recursive = T), value = T)
   COPSframe <- data.frame(dirs)
 
+  COPSframe <- COPSframe %>%
+  mutate(Station = paste0(str_extract(dirs, "(?<=/)[[:digit:]]{8}(T//d//d://d//d)?(?=_Station)"),
+                          "_",
+                          str_extract(dirs, "(?<=Station)[[:alnum:]-\\.]+(?=/)")))
+
+  # add boat if pattern is present
   if (any(str_detect(dirs, "/COPS_[[:alpha:]]+$"))){
   COPSframe <- COPSframe %>%
-    mutate(Station = paste0(str_extract(dirs, "(?<=Station)[[:alnum:]-\\.]+(?=/)"),
+    mutate(Station = paste0(Station,
                             str_extract(dirs,"(?<=/COPS)_[:alnum:]+$")))
-  } else {
-    COPSframe <- COPSframe %>%
-      mutate(Station = paste0(str_extract(dirs, "(?<=Station)[[:alnum:]-\\.]+(?=/)")))
   }
 
   # Identifies paths with ProLog
@@ -486,16 +494,19 @@ generate.cops.DB <- function(project,
   ### Extract the Station ID from the paths
   for (d in 1:ndirs) {
     res=unlist(strsplit(as.character(dirs[d]), "/"))
+
     for (i in 1:length(res)){
       xx = str_locate(res[i], "_Station")
+
       if (!is.na(xx[1])) {
         datestation=unlist(strsplit(res[i], "_Station"))
+
         # Remove "_" from station name to avoid error with Latex
         if (str_detect(datestation[2], "_")) {
-          yy = unlist(strsplit(datestation[2], "_"))
-
+          yy = unlist(strsplit(str_flatten(datestation, "_"), "_"))
           stationID[d] = paste(yy, collapse=" ")
-        }   else stationID[d] =   datestation[2]
+
+        } else stationID[d] =   str_flatten(datestation, "_")
       }
     }
   }
@@ -688,7 +699,7 @@ generate.cops.DB <- function(project,
   render(report)
   file.remove(report)
 
-
+  setwd(project)
   return(COPS.DB)
 }
 
