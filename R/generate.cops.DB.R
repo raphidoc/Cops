@@ -536,17 +536,17 @@ generate.cops.DB <- function(project,
 
   all <- cbind(stationID,all)
   setwd(ppath)
-  save(COPS.DB, file = paste("COPS_DB_PackageVersion_",packageVersion("Cops"),"_",
-                             mission,str_c(boat,collapse = "_"),".RData", sep=""))
-  write.table(all, file = paste("COPS_DB_PackageVersion_",packageVersion("Cops"),"_",
-                                mission,str_c(boat,collapse = "_"),".dat", sep=""), sep=",", quote=F, row.names=F)
+  save(COPS.DB, file = paste("COPS_DB_PV",packageVersion("Cops"),"_",
+                             mission,"_",str_c(boat,collapse = "_"),".RData", sep=""))
+  write.table(all, file = paste("COPS_DB_PV",packageVersion("Cops"),"_",
+                                mission,"_",str_c(boat,collapse = "_"),".dat", sep=""), sep=",", quote=F, row.names=F)
 
   # Generate report in html allowing first quality check
   # html output take advantage of interactive plot throught plotly
   require(rmarkdown)
 
-  report = paste0("Report_COPS_DB_PackageVersion_",packageVersion("Cops"),"_",
-                  mission,str_c(boat,collapse = "_"),".Rmd")
+  report = paste0("Report_COPS_DB_PV",packageVersion("Cops"),"_",
+                  mission,"_",str_c(boat,collapse = "_"),".Rmd")
 
   cat(paste0("---\ntitle: '<center>COPS report for __",mission," ",str_c(boat,collapse = "_"),"__ mission from __",min(COPS.DB$date),"__ to __",max(COPS.DB$date),"__ UTC </center>'\n",
            "author: ''\n",

@@ -43,7 +43,7 @@ plot.Rrs.Kd.for.station <- function(path="./", depthEdZ = NA) {
       pointsize = 14, bg = "white")
 
   # select 380 to NIR bands
-  ix.waves = which(waves > 370)
+  ix.waves = which(waves > 300)
 
   if (!all(is.na(cops$Rrs.0p.linear))) {
     maxY <- c(0,max(cops$Rrs.0p.linear[ix.waves],na.rm=T)+0.002)
@@ -54,7 +54,7 @@ plot.Rrs.Kd.for.station <- function(path="./", depthEdZ = NA) {
   plot(waves[ix.waves], cops$Rrs.0p[ix.waves], xlab="Wavelength",
        ylab="Rrs0+",
        ylim= maxY,
-       xlim=c(370, max(waves)+10),
+       xlim=c(min(waves), max(waves)+10),
        lwd=2, type="l", main=getwd(), sub=cops$date.mean)
   for (i in 1:nf){
     load(paste(listfile[i], ".RData", sep=""))
