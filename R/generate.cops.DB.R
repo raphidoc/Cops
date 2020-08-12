@@ -6,9 +6,10 @@
 #' Generate an AOPs data base derived from COPS light profiles for a list of directories
 #'
 #' @description The AOPs (Kd_s, Rrs) derived from valid profiles are averaged.
-#' IMPORTANT: the only the cast selected in select.cops.dat will be average.
-#' In addition, the extrapolation method for Rrs.0p must be specified in the
+#' IMPORTANT: only the cast selected in select.cops.dat will be average.
+#' The extrapolation method for Rrs (Rrs.0p or Rrs.0p.linear) must be specified in the
 #' third column of the select.cops.dat.
+#' Cops_Processing_Log is used to filter if a Station is kept (True or False).
 #'
 #' @param project is the project path top level where Cops_Processing_Log can be found.
 #'
