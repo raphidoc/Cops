@@ -4,9 +4,9 @@
 #' IMPORTANT: only the cast selected in select.cops.dat will be average.
 #' The extrapolation method for Rrs (Rrs.0p or Rrs.0p.linear) must be specified in the
 #' third column of the select.cops.dat.
-#' Cops_Processing_Log is used to filter if a Station is kept (True or False).
+#' cops_processing_log is used to filter if a Station is kept (T or F).
 #'
-#' @param project is the project path top level where Cops_Processing_Log can be found.
+#' @param project is the project path top level (i.e, where data_synthesis can be found) .
 #'
 #' @param mission is a string for the name of the mission. It will be used for the file names of the output.
 #'
@@ -15,13 +15,12 @@
 #' @return It returns a list object named COPS.DB containing matrices of
 #' mean and standard deviation
 #' of Kd1p, Kd10p, Kdpd, Rrs, Ed0.0p,  Ed0.f.diff
-#' and vectors for
-#' stationID, date, lat, lon sunzen and waves
+#' and vectors for ID, date, lat, lon sunzen and waves
 #'
-#' The object COPS.DB is saved in RData format. The data are also saved in ASCII (.dat with comma separator)
-#' and a figure showing the measured rho_w spectra of the data base is produced.
+#' The object COPS.DB is saved in RData format. The data are also saved in ASCII (.csv)
+#' and a report showing the spectrums of the data base is produced.
+#'
 #' @author Simon Bélanger
-
 #' @title generate_cops_db
 #' @export
 #'
@@ -43,7 +42,7 @@ generate_cops_db <- function(project, mission="XXX", boat=c("")) {
   #if (CheckList["Proot"][[1]] == F) {stop("project path is not set at a project root folder")}
 
   # Read processing Log
-  LogFile <- list.files(path = file.path(project,"ProLog"), pattern = "Cops_Processing_Log", recursive = T, full.names = T)
+  LogFile <- list.files(path = file.path(project,"ProLog"), pattern = "cops_processing_log", recursive = T, full.names = T)
 
   ProLog <- data.table::fread(file = LogFile, data.table = F, colClasses = "character")
 
@@ -89,9 +88,7 @@ generate_cops_db <- function(project, mission="XXX", boat=c("")) {
   if (boat != c("")) {
     ProLog <- ProLog %>% filter(Boat == boat)
   }
-
   setwd(L2)
-  ppath <- getwd()
 
   #
   dirs <- as.character(ProLog$dirs)
@@ -486,8 +483,6 @@ generate_cops_db <- function(project, mission="XXX", boat=c("")) {
     }
 
   }
-
-  setwd(ppath)
   ### Extract the Station ID from the paths
   # ID <- list()
   # for (d in 1:ndirs) {
@@ -529,19 +524,32 @@ generate_cops_db <- function(project, mission="XXX", boat=c("")) {
                  Ed0.f.diff = Ed0.f[,c(-ix.to.remove,-(nwaves+1))],
                  Ed0.f.diff.measured = Ed0.f[,(nwaves+1)])
 
-  all <- cbind(stationID,all)
-  setwd(ppath)
-  save(COPS.DB, file = paste("COPS_DB_PV",packageVersion("Cops"),"_",
-                             mission,"_",str_c(boat),".RData", sep=""))
-  write.table(all, file = paste("COPS_DB_PV",packageVersion("Cops"),"_",
-                                mission,"_",str_c(boat),".csv", sep=""), sep=",", quote=F, row.names=F)
+  all <- cbind(ID,all)
+  setwd(project)
+
+  # Check L3 for existence and non emptiness, create an archive with old db if present.
+  # Must change directory in order to properly create an archive (no compression, could be)
+  L3 <- file.path(project,"L3","COPS")
+  if (dir.exists(L3) && length(list.files(L3)) != 0) {
+    message("L3 COPS dir exist and is not empty, creating an archive.")
+    db <- list.files(L3, pattern ="COPS",)
+    setwd(L3)
+    tar(tarfile = file.path(L3,paste0("archive_",Sys.Date(),".tar")))
+
+  } else if (!dir.exists(L3)){
+    dir.create(L3)
+  }
+  setwd(project)
+
+  save(COPS.DB, file = paste0(L3,"/","COPS_DB_",Sys.Date(),"_",str_c(mission, boat, collapse = "_"),".RData"))
+  write.table(all, file = paste0(L3,"/","COPS_DB_",Sys.Date(),"_",str_c(mission, boat, collapse = "_"),".csv")
+              , sep=",", quote=F, row.names=F)
 
   # Generate report in html allowing first quality check
   # html output take advantage of interactive plot throught plotly
   require(rmarkdown)
 
-  report = paste0("Report_COPS_DB_PV",packageVersion("Cops"),"_",
-                  mission,"_",str_c(boat,collapse = "_"),".Rmd")
+  report = paste0("Report_COPS_DB_",Sys.Date(),"_",str_c(mission,boat,collapse = "_"),".Rmd")
 
   cat(paste0("---\ntitle: '<center>COPS report for __",mission," ",str_c(boat,collapse = "_"),"__ mission from __",min(COPS.DB$date),"__ to __",max(COPS.DB$date),"__ UTC </center>'\n",
            "author: ''\n",
@@ -560,7 +568,7 @@ generate_cops_db <- function(project, mission="XXX", boat=c("")) {
             "Date: __",Sys.time(),"__ GMT</font></center>\n"), file = report, append=T)
 
   # Rrs spectrum plot
-  cat("\n# Rrs report \n\n", file = report, append=T)
+  cat("\n# Rrs \n\n", file = report, append=T)
   cat(paste0("```{r,echo=FALSE, message=FALSE}\n",
              "  Rrs <- data.frame(COPS.DB$ID, COPS.DB$Rrs.m)
   names(Rrs) <- c(\"ID\",paste0(\"Rrs_\",COPS.DB$waves))
@@ -569,7 +577,7 @@ generate_cops_db <- function(project, mission="XXX", boat=c("")) {
                                             \"([:alnum:]+_)?[:alnum:]+(?=(_[:digit:]+))\")),
                    names_to = c(\".value\",\"Lambda\"),
                    names_pattern = \"(.+)_(.+)\")
-  ggplotly(Rrs %>% filter(Rrs < 0.01) %>% ggplot(aes(Lambda, Rrs, group=ID, color=ID)) + geom_line(alpha=0.5) + ylab('Rrs [sr-1]'))\n",
+  ggplotly(Rrs %>% ggplot(aes(Lambda, Rrs, group=ID, color=ID)) + geom_line(alpha=0.5) + ylab('Rrs [sr-1]'))\n",
              "```\n"), file = report, append = T)
 
   # Rrs stats table
@@ -580,7 +588,7 @@ generate_cops_db <- function(project, mission="XXX", boat=c("")) {
              "```\n"), file = report, append = T)
 
   # nLw spectrum plot
-  cat("\n# nLw report \n\n", file = report, append=T)
+  cat("\n# nLw \n\n", file = report, append=T)
   cat(paste0("```{r,echo=FALSE, message=FALSE}\n",
              "  nLw <- data.frame(COPS.DB$ID, COPS.DB$nLw.m)
   names(nLw) <- c(\"ID\",paste0(\"nLw_\",COPS.DB$waves))
@@ -600,7 +608,7 @@ generate_cops_db <- function(project, mission="XXX", boat=c("")) {
              "```\n"), file = report, append = T)
 
   # Q factor spectrum plot
-  cat("\n# Q factor report \n\n", file = report, append=T)
+  cat("\n# Q factor \n\n", file = report, append=T)
   cat(paste0("```{r,echo=FALSE, message=FALSE}\n",
              "  Q.Factor <- data.frame(COPS.DB$ID, COPS.DB$Q.Factor.m)
   names(Q.Factor) <- c(\"ID\",paste0(\"Q.Factor_\",COPS.DB$waves))
@@ -620,7 +628,7 @@ generate_cops_db <- function(project, mission="XXX", boat=c("")) {
              "```\n"), file = report, append = T)
 
   # Rb spectrum plot
-  cat("\n# Bottom reflectance report \n\n", file = report, append=T)
+  cat("\n# Bottom reflectance \n\n", file = report, append=T)
   cat(paste0("```{r,echo=FALSE, message=FALSE}\n",
              "  Rb <- data.frame(COPS.DB$ID, COPS.DB$Rb.m)
   names(Rb) <- c(\"ID\",paste0(\"Rb_\",COPS.DB$waves))
@@ -640,7 +648,7 @@ generate_cops_db <- function(project, mission="XXX", boat=c("")) {
              "```\n"), file = report, append = T)
 
   # Kd1p spectrum plot
-  cat("\n# Kd 1 percent report \n\n", file = report, append=T)
+  cat("\n# Kd 1 percent \n\n", file = report, append=T)
   cat(paste0("```{r,echo=FALSE, message=FALSE}\n",
              "  Kd.1p <- data.frame(COPS.DB$ID, COPS.DB$Kd.1p.m)
   names(Kd.1p) <- c(\"ID\",paste0(\"Kd.1p_\",COPS.DB$waves))
@@ -660,7 +668,7 @@ generate_cops_db <- function(project, mission="XXX", boat=c("")) {
              "```\n"), file = report, append = T)
 
   # Kd10p spectrum plot
-  cat("\n# Kd 10 percent report \n\n", file = report, append=T)
+  cat("\n# Kd 10 percent \n\n", file = report, append=T)
   cat(paste0("```{r,echo=FALSE, message=FALSE}\n",
              "  Kd.10p <- data.frame(COPS.DB$ID, COPS.DB$Kd.10p.m)
   names(Kd.10p) <- c(\"ID\",paste0(\"Kd.10p_\",COPS.DB$waves))
@@ -680,11 +688,8 @@ generate_cops_db <- function(project, mission="XXX", boat=c("")) {
              "```\n"), file = report, append = T)
 
   #render(report, pdf_document())
-  render(report)
+  render(report, output_dir = L3)
   file.remove(report)
-
-  setwd(project)
-  return(COPS.DB)
 }
 
 mean.parameter <- function(par) {
