@@ -3,7 +3,7 @@
 #'
 #'
 #' @author Bernard Gentili and Simon Belanger
-#' @export
+#'
 process.cops <- function(dirdat, ASCII=FALSE, CLEAN.FILES=FALSE) {
 	# initialisation file
 	generic.init.file <- paste( Sys.getenv("R_COPS_DATA_DIR"), "init.parameters.dat", sep = "/")
@@ -179,7 +179,7 @@ str(absorption.tab)
           print("will be reset to x to take all measurements.")
           info5 <- "x"
         }
-        clean.cops.file(cops.file, out.file = NA)
+        clean_cops_file(cops.file, out.file = NA)
       }
 
       if(info5 != "x") {

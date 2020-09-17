@@ -17,7 +17,7 @@
 #'  3) the vector of PAR at all depth Z (PAR.z) in micro mol photon / m^2
 #'
 #'@author Simon Belanger
-#'@export
+
 compute.PARz <- function(Depth, waves, Edz, Ed.0,
                          f.PAR=c(0.001, 0.01, 0.1,0.5),
                          z.fixed=c(5,10,20,30,40)) {

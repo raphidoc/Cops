@@ -1,2 +1,3 @@
-Cops.so
-qaa.o
+*.o
+*.so
+*.dll

@@ -15,7 +15,6 @@
 #'  @return It produces 2 plots in PNG format in the working directory.
 #'
 #' @author  Simon Belanger, UQAR
-#' @export
 
 plot.Rrs.Kd.for.station <- function(path="./", depthEdZ = NA) {
   setwd(path)

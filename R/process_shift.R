@@ -1,11 +1,11 @@
-process.shift <- function(dir, idx, new.waves, nearest, window) {
+process_shift <- function(dir, idx, new.waves, nearest, window) {
 	data("thuillier.completed.by.AM0AM1")
 	data("oz.k")
 	data("table.Q")
 	data("table.f")
 	cops <- copsdata(dir)
-	copsqaa(cops$Rrs, idx, dir)
-	copsshift(cops, new.waves, nearest, window, dir)
+	cops_qaa(cops$Rrs, idx, dir)
+	cops_shift(cops, new.waves, nearest, window, dir)
 	cat("******************************************************************************************************\n")
 	cat("In directory ", paste(dir, "shift.cops", sep = "/"), " See :\n")
 	cat("----------------------------------------------------------------\n")

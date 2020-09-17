@@ -229,7 +229,7 @@ qaa_set_param(int param, ...) {
  *  @param[out]  u        ratio (nbands)
  *  @param[out]  a        total absorption (nbands)
  *  @param[out]  bb       backscattering (nbands)
- *  @param[out]  flags    quality flags (will be modified) or NULL     
+ *  @param[out]  flags    quality flags (will be modified) or NULL
  *
  *  This implements version 6 of the Quasi-Analytical Algorithm.
  */
@@ -667,7 +667,7 @@ g0 <- 0.08945
 g1 <- 0.1247
 */
 
-    
+
         /*    412       443       490       510       555       670 */
 /*
     float Rrs_insitu[NUM_SPECTRA][NBANDS] = {

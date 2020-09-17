@@ -7,18 +7,22 @@
 #'  depth specified by distance.above.bottom will be remove.
 #'
 #'
-#'@param in.file is the file name of the raw COPS cast to process
-#'@param out.file is the file name of the cleaned COPS file.
+#' @param in.file is the file name of the raw COPS cast to process
+#'
+#' @param out.file is the file name of the cleaned COPS file.
 #'  If NA, the input file will be overwrite. The default is "cleaned.cops.csv"
-#'@param distance.above.bottom is the distance above the bottom at which the user want to cut the data.
+#'
+#' @param distance.above.bottom is the distance above the bottom at which the user want to cut the data.
 #'  This is for shallow water casts for which the last COPS measurement are affected by the instrument shadow.
 #'  If NA, we assume the profile in deep open water and all data are kept.
 #'  The default is 0.15, so the last 15 cm of the profile is removed.
 #'
-#'@author Simon Belanger
-#'@export
+#' @author Simon Belanger
+#'
+#' @export
+#'
 
-clean.cops.file <- function (in.file="", out.file="cleaned.cops.csv", distance.above.bottom=0.15) {
+clean_cops_file <- function (in.file="", out.file="cleaned.cops.csv", distance.above.bottom=0.15) {
 
   if (!file.exists(in.file)) {
     print(paste("File ", in.file, " does not exist"))

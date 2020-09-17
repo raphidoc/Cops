@@ -21,9 +21,7 @@
 #'
 #'
 #' @author Simon Belanger
-#'
-#' @export
-#'
+
 read.COPS <- function(file,number.of.fields.before.date,instruments.optics=c("Ed0", "EdZ", "LuZ")) {
   dirdat=getwd()
   instruments.others = "NA"

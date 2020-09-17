@@ -1,4 +1,4 @@
-copsshift <- function(cops, new.waves0, nearest, window, dir) {
+cops_shift <- function(cops, new.waves0, nearest, window, dir) {
 	qaa.outfile <- paste(dir, "shift.cops", "qaa.out", sep = "/")
 	shift.pdffile <- paste(dir, "shift.cops", "shift.pdf", sep = "/")
 	################################################################
@@ -144,7 +144,7 @@ copsshift <- function(cops, new.waves0, nearest, window, dir) {
 				Ed0.new.waves2 <- append(Ed0.new.waves2, e1)
 			}
 		}
-	
+
 		Lw.new.waves2 <- Rrs.new.waves2 * Ed0.new.waves2
 		Ed0.th.new.waves2 <- func.Ed0.th(params["sunzen"], params["month"], params["day"], new.waves2, window)
 		nLw.new.waves2 <- Rrs.new.waves2 * etirrwindow(new.waves2, window)

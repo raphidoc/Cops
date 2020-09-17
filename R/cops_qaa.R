@@ -1,4 +1,6 @@
-copsqaa <- function(Rrs, idx, dir) {
+#' @useDynLib Cops qaa
+
+cops_qaa <- function(Rrs, idx, dir) {
 
 	filein <- paste(dir, "shift.cops", "qaa.in", sep = "/")
 	fileout <- paste(dir, "shift.cops", "qaa.out", sep = "/")

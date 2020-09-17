@@ -34,6 +34,7 @@
 #'
 #'
 #' @author Simon Bélanger
+
 compute.Ksurf.linear <- function (Depth, aop,
                                   r2.threshold = 0.80,
                                   instrument = "LuZ",

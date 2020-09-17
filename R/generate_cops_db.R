@@ -1,8 +1,3 @@
-#' @export
-#'
-#' @import dplyr
-#' @import stringr
-#'
 #' Generate an AOPs data base derived from COPS light profiles for a list of directories
 #'
 #' @description The AOPs (Kd_s, Rrs) derived from valid profiles are averaged.
@@ -25,10 +20,13 @@
 #'
 #' The object COPS.DB is saved in RData format. The data are also saved in ASCII (.dat with comma separator)
 #' and a figure showing the measured rho_w spectra of the data base is produced.
+#' @author Simon Bélanger
+
+#' @title generate_cops_db
+#' @export
 #'
-generate.cops.DB <- function(project,
-                             mission="XXX",
-                             boat=c("")) {
+
+generate_cops_db <- function(project, mission="XXX", boat=c("")) {
 
   if (!is.character(mission)) {stop("mission must be character")}
 
@@ -47,7 +45,7 @@ generate.cops.DB <- function(project,
   # Read processing Log
   LogFile <- list.files(path = file.path(project,"ProLog"), pattern = "Cops_Processing_Log", recursive = T, full.names = T)
 
-  ProLog <- data.table::fread(file = LogFile, data.table = F)
+  ProLog <- data.table::fread(file = LogFile, data.table = F, colClasses = "character")
 
   if (any(str_detect(names(ProLog), "Boat"))) {
     ProLog <- ProLog %>% mutate(Station = paste(Station_name,Boat,sep = "_"))
@@ -56,14 +54,12 @@ generate.cops.DB <- function(project,
     ProLog <- ProLog %>% mutate(Station = paste(str_replace_all(Date, "-", ""),Station_name,sep = "_"))
   }
 
-  # List available Station in L2
+  # List available data point in L2
   dirs <- grep("/COPS(_[[:alpha:]]+)?$",list.dirs(L2,recursive = T), value = T)
   COPSframe <- data.frame(dirs)
 
   COPSframe <- COPSframe %>%
-  mutate(Station = paste0(str_extract(dirs, "(?<=/)[[:digit:]]{8}(T//d//d://d//d)?(?=_Station)"),
-                          "_",
-                          str_extract(dirs, "(?<=Station)[[:alnum:]-\\.]+(?=/)")))
+  mutate(ID = str_extract(dirs, "(?<=/)[[:digit:]]+"))
 
   # add boat if pattern is present
   if (any(str_detect(dirs, "/COPS_[[:alpha:]]+$"))){
@@ -73,7 +69,7 @@ generate.cops.DB <- function(project,
   }
 
   # Identifies paths with ProLog
-  ProLog <- ProLog %>% inner_join(COPSframe, by="Station")
+  ProLog <- ProLog %>% inner_join(COPSframe, by="ID")
 
   # Filter Station_Kept == T
   ProLog <- ProLog %>% filter(Station_kept == "T")
@@ -493,30 +489,17 @@ generate.cops.DB <- function(project,
 
   setwd(ppath)
   ### Extract the Station ID from the paths
-  for (d in 1:ndirs) {
-    res=unlist(strsplit(as.character(dirs[d]), "/"))
-
-    for (i in 1:length(res)){
-      xx = str_locate(res[i], "_Station")
-
-      if (!is.na(xx[1])) {
-        datestation=unlist(strsplit(res[i], "_Station"))
-
-        # Remove "_" from station name to avoid error with Latex
-        if (str_detect(datestation[2], "_")) {
-          yy = unlist(strsplit(str_flatten(datestation, "_"), "_"))
-          stationID[d] = paste(yy, collapse=" ")
-
-        } else stationID[d] =   str_flatten(datestation, "_")
-      }
-    }
-  }
+  # ID <- list()
+  # for (d in 1:ndirs) {
+  #   ID[d] = stringr::str_extract(dirs[d], "(?<=/)[:digit:]{2,5}(?=/)")
+  # }
+  ID <- ProLog$ID
 
   ##### Remove wavelenghts that are absent.
   to.remove = apply(is.na(Ed0.0p.m),2,all)
   ix.to.remove = which(to.remove)
 
-  COPS.DB = list(stationID = stationID,
+  COPS.DB = list(ID = ID,
                  date = as.POSIXct(date,origin = "1970-01-01"),
                  sunzen = sunzen,
                  lat = lat,
@@ -549,9 +532,9 @@ generate.cops.DB <- function(project,
   all <- cbind(stationID,all)
   setwd(ppath)
   save(COPS.DB, file = paste("COPS_DB_PV",packageVersion("Cops"),"_",
-                             mission,"_",str_c(boat,collapse = "_"),".RData", sep=""))
+                             mission,"_",str_c(boat),".RData", sep=""))
   write.table(all, file = paste("COPS_DB_PV",packageVersion("Cops"),"_",
-                                mission,"_",str_c(boat,collapse = "_"),".dat", sep=""), sep=",", quote=F, row.names=F)
+                                mission,"_",str_c(boat),".csv", sep=""), sep=",", quote=F, row.names=F)
 
   # Generate report in html allowing first quality check
   # html output take advantage of interactive plot throught plotly
@@ -579,7 +562,7 @@ generate.cops.DB <- function(project,
   # Rrs spectrum plot
   cat("\n# Rrs report \n\n", file = report, append=T)
   cat(paste0("```{r,echo=FALSE, message=FALSE}\n",
-             "  Rrs <- data.frame(COPS.DB$stationID, COPS.DB$Rrs.m)
+             "  Rrs <- data.frame(COPS.DB$ID, COPS.DB$Rrs.m)
   names(Rrs) <- c(\"ID\",paste0(\"Rrs_\",COPS.DB$waves))
 
   Rrs <- Rrs %>% pivot_longer(cols = all_of(str_subset(names(Rrs),
@@ -599,7 +582,7 @@ generate.cops.DB <- function(project,
   # nLw spectrum plot
   cat("\n# nLw report \n\n", file = report, append=T)
   cat(paste0("```{r,echo=FALSE, message=FALSE}\n",
-             "  nLw <- data.frame(COPS.DB$stationID, COPS.DB$nLw.m)
+             "  nLw <- data.frame(COPS.DB$ID, COPS.DB$nLw.m)
   names(nLw) <- c(\"ID\",paste0(\"nLw_\",COPS.DB$waves))
 
   nLw <- nLw %>% pivot_longer(cols = all_of(str_subset(names(nLw),
@@ -619,7 +602,7 @@ generate.cops.DB <- function(project,
   # Q factor spectrum plot
   cat("\n# Q factor report \n\n", file = report, append=T)
   cat(paste0("```{r,echo=FALSE, message=FALSE}\n",
-             "  Q.Factor <- data.frame(COPS.DB$stationID, COPS.DB$Q.Factor.m)
+             "  Q.Factor <- data.frame(COPS.DB$ID, COPS.DB$Q.Factor.m)
   names(Q.Factor) <- c(\"ID\",paste0(\"Q.Factor_\",COPS.DB$waves))
 
   Q.Factor <- Q.Factor %>% pivot_longer(cols = all_of(str_subset(names(Q.Factor),
@@ -639,7 +622,7 @@ generate.cops.DB <- function(project,
   # Rb spectrum plot
   cat("\n# Bottom reflectance report \n\n", file = report, append=T)
   cat(paste0("```{r,echo=FALSE, message=FALSE}\n",
-             "  Rb <- data.frame(COPS.DB$stationID, COPS.DB$Rb.m)
+             "  Rb <- data.frame(COPS.DB$ID, COPS.DB$Rb.m)
   names(Rb) <- c(\"ID\",paste0(\"Rb_\",COPS.DB$waves))
 
   Rb <- Rb %>% pivot_longer(cols = all_of(str_subset(names(Rb),
@@ -659,7 +642,7 @@ generate.cops.DB <- function(project,
   # Kd1p spectrum plot
   cat("\n# Kd 1 percent report \n\n", file = report, append=T)
   cat(paste0("```{r,echo=FALSE, message=FALSE}\n",
-             "  Kd.1p <- data.frame(COPS.DB$stationID, COPS.DB$Kd.1p.m)
+             "  Kd.1p <- data.frame(COPS.DB$ID, COPS.DB$Kd.1p.m)
   names(Kd.1p) <- c(\"ID\",paste0(\"Kd.1p_\",COPS.DB$waves))
 
   Kd.1p <- Kd.1p %>% pivot_longer(cols = all_of(str_subset(names(Kd.1p),
@@ -679,7 +662,7 @@ generate.cops.DB <- function(project,
   # Kd10p spectrum plot
   cat("\n# Kd 10 percent report \n\n", file = report, append=T)
   cat(paste0("```{r,echo=FALSE, message=FALSE}\n",
-             "  Kd.10p <- data.frame(COPS.DB$stationID, COPS.DB$Kd.10p.m)
+             "  Kd.10p <- data.frame(COPS.DB$ID, COPS.DB$Kd.10p.m)
   names(Kd.10p) <- c(\"ID\",paste0(\"Kd.10p_\",COPS.DB$waves))
 
   Kd.10p <- Kd.10p %>% pivot_longer(cols = all_of(str_subset(names(Kd.10p),
