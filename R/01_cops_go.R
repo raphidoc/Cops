@@ -33,12 +33,12 @@ cops.go <- function(interactive = FALSE, ASCII=FALSE, CLEAN.FILES=FALSE) {
 		}
 	} else {
 		if(!file.exists("directories.for.cops.dat")) {
-			cat("CREATE a file named directories.for.cops.dat in current directory (where R is launched)\n")
+			cat("CREATE a file named directories.for.cops.dat in current directory (R working directory)\n")
 			cat("  and put in it the names of the directories where data files can be found (one by line)\n")
 			stop()
 		} else {
 			dirdats <- scan(file = "directories.for.cops.dat", "", sep = "\n", comment.char = "#")
-			starting.dir <- getwd()
+			L2 <- getwd()
 			for(dirdat in dirdats) {
 				if(!file.exists(dirdat)) {
 					cat(dirdat, "does not exist")
@@ -52,27 +52,27 @@ cops.go <- function(interactive = FALSE, ASCII=FALSE, CLEAN.FILES=FALSE) {
 				    graphics.off()
 				    process.cops(dirdat, ASCII, CLEAN.FILES)
 				    plot.Rrs.Kd.for.station(dirdat)
-				    #message("Succes \\o/\n\t|\n\x20\x20\x20\x20\x20\x20\x20/ \\")
+				    #message("Succes \\o/")
 				  },
 				  error = function(e){
-				    message("error: /o\\\n\t|\n\t/ \\")
+				    message("error: /o\\")
 				    message(e,"\n")
 				    cat(paste0("-----",Sys.time(),"\n",dirdat,"\n",e,"-----\n"),
-				        file = file.path(starting.dir,paste0("COPS_errors_",Sys.Date(),".txt")),
+				        file = file.path(L2,paste0("Cops_errors_",Sys.Date(),".txt")),
 				        append = T)
 				    #invokeRestart("abort")
 				  },
 				  #warning = function(w){
 				    #message("warning: _o_\n\t\x20\x20|\n\t\x20/ \\")
 				    #cat(paste0("-----",dirdat,"\n",w,"\n-----"),
-				        #file = file.path(starting.dir,paste0("COPS_warnings_",Sys.Date(),".txt")),
+				        #file = file.path(L2,paste0("COPS_warnings_",Sys.Date(),".txt")),
 				        #append = T)
 				    #invokeRestart("muffleWarning")
 				  #},
 				  finally = next()
 				)
 			}
-			setwd(starting.dir)
+			setwd(L2)
 		}
 	}
 }
