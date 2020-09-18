@@ -536,8 +536,8 @@ generate_cops_db <- function(project, mission="XXX", boat=c("")) {
     setwd(L3)
     tar(tarfile = file.path(L3,paste0("archive_",Sys.Date(),".tar")))
 
-  } else if (!dir.exists(L3)){
-    dir.create(L3)
+  } else if (!dir.exists(L3)) {
+    dir.create(L3, recursive = T)
   }
   setwd(project)
 
